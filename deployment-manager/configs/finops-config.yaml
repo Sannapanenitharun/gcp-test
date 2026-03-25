@@ -1,0 +1,6 @@
+imports:
+- path: ../templates/finops-template.jinja
+
+resources:
+- name: finops-deployment
+  type: ../templates/finops-template.jinja
