@@ -1,0 +1,24 @@
+resources:
+
+# Service Account
+- name: finops-sa
+  type: iam.v1.serviceAccount
+  properties:
+    accountId: finops-sa
+    displayName: FinOps Service Account
+
+# IAM Binding
+- name: finops-sa-viewer
+  type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
+  properties:
+    resource: {{ env["project"] }}
+    role: roles/viewer
+    member: serviceAccount:finops-sa@{{ env["project"] }}.iam.gserviceaccount.com
+
+# BigQuery Dataset
+- name: billing_dataset
+  type: bigquery.v2.dataset
+  properties:
+    datasetReference:
+      datasetId: finops_billing
+    location: US
