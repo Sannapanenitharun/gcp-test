@@ -1,24 +1,43 @@
+{% set project = env["project"] %}
+{% set sa_name = "finops-sa" %}
+{% set role_id = "finopsViewer" %}
+
 resources:
 
 # Service Account
 - name: finops-sa
   type: iam.v1.serviceAccount
   properties:
-    accountId: finops-sa
+    accountId: {{ sa_name }}
     displayName: FinOps Service Account
 
-# IAM Binding
-- name: finops-sa-viewer
+
+# Custom Role
+- name: finops-role
+  type: gcp-types/iam-v1:projects.roles
+  properties:
+    parent: projects/{{ project }}
+    roleId: {{ role_id }}
+    role:
+      title: FinOps Viewer
+      description: Read-only billing + resource access
+      includedPermissions:
+        - bigquery.jobs.create
+        - bigquery.tables.getData
+        - compute.instances.list
+        - compute.disks.list
+        - compute.machineTypes.list
+        - compute.regions.list
+        - compute.zones.list
+        - monitoring.timeSeries.list
+        - storage.buckets.list
+        - resourcemanager.projects.get
+
+
+# Bind Role
+- name: bind-role
   type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
   properties:
-    resource: {{ env["project"] }}
-    role: roles/viewer
-    member: serviceAccount:finops-sa@{{ env["project"] }}.iam.gserviceaccount.com
-
-# BigQuery Dataset
-- name: billing_dataset
-  type: bigquery.v2.dataset
-  properties:
-    datasetReference:
-      datasetId: finops_billing
-    location: US
+    resource: {{ project }}
+    role: projects/{{ project }}/roles/{{ role_id }}
+    member: serviceAccount:{{ sa_name }}@{{ project }}.iam.gserviceaccount.com
